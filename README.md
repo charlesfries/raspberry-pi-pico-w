@@ -4,10 +4,10 @@
 
 * `git clone https://github.com/charlesfries/raspberry-pi-pico-w`
 * `cd raspberry-pi-pico-w`
-* `touch secrets.py`
+* `touch keys.py`
 
 ```python
-# secrets.py
+# keys.py
 
 SSID = ''
 PASSWORD = ''

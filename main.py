@@ -1,99 +1,115 @@
 import network
+import ubinascii
 import socket
-import time
-import machine
+from time import sleep
+from machine import Pin
 
-import secrets
+import keys
 
 MAX_WAIT = 10
 
-led = machine.Pin('LED', machine.Pin.OUT)
+led = Pin("LED", Pin.OUT)
+
 
 def setupNetwork():
-    print(f'Connecting to {secrets.SSID}')
 
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
-    wlan.connect(secrets.SSID, secrets.PASSWORD)
+
+    mac = ubinascii.hexlify(network.WLAN().config("mac"), ":").decode()
+    print("MAC", mac)
+
+    print("Connecting to", keys.SSID)
+    wlan.connect(keys.SSID, keys.PASSWORD)
 
     max_wait = MAX_WAIT
     while max_wait > 0:
         if wlan.status() < 0 or wlan.status() >= 3:
             break
         max_wait -= 1
-        print('Connecting...')
-        time.sleep(1)
+        print("Connecting...")
+        sleep(1)
 
     if wlan.status() != 3:
-        raise RuntimeError('Could not connect')
+        raise RuntimeError("Could not connect")
     else:
-        print('Connected')
         status = wlan.ifconfig()
-        print( 'ip = ' + status[0] )
+        print("Connected with IP", status[0])
 
     return wlan
 
-def setupUi():
-    while (True):
-        led.on()
-        time.sleep(1)
-        led.off()
-        time.sleep(1)
 
 def setupServer():
-    addr = socket.getaddrinfo('0.0.0.0', 80)[0][-1]
+    addr = socket.getaddrinfo("0.0.0.0", 80)[0][-1]
 
-    s = socket.socket()
-    s.bind(addr)
-    s.listen(1)
+    connection = socket.socket()
+    connection.bind(addr)
+    connection.listen(1)
 
     while True:
         try:
-            print('Test')
-
-            cl, addr = s.accept()
-            print('client connected from', addr)
-            request = cl.recv(1024)
+            client, addr = connection.accept()
+            print("Client connected from", addr)
+            request = client.recv(1024)
             print(request)
 
             request = str(request)
-            led_on = request.find('/light/on')
-            led_off = request.find('/light/off')
-            print( 'led on = ' + str(led_on))
-            print( 'led off = ' + str(led_off))
+            led_on = request.find("/light/on")
+            led_off = request.find("/light/off")
+            print("LED on:", str(led_on))
+            print("LED off:", str(led_off))
 
-            stateis = "DEFAULT..."
+            state = "UNKNOWN"
 
             if led_on == 6:
-                print("led on")
+                print("LED on")
                 led.on()
-                stateis = "LED is ON"
+                state = "ON"
 
             if led_off == 6:
-                print("led off")
+                print("LED off")
                 led.off()
-                stateis = "LED is OFF"
+                state = "OFF"
 
-            html = """<!DOCTYPE html>
-            <html>
-                <head> <title>Pico W</title> </head>
-                <body> <h1>Pico W</h1>
-                    <p>%s</p>
-                </body>
-            </html>
+            html = (
+                """
+                <!DOCTYPE html>
+                <html>
+                    <head>
+                        <title>Raspberry Pi Pico W</title>
+                    </head>
+                    <body>
+                        <h1>Raspberry Pi Pico W</h1>
+                        <p>LED is %s</p>
+                        <form action="/light/on">
+                            <input type="submit" value="On " />
+                        </form>
+                        <form action="/light/off">
+                            <input type="submit" value="Off" />
+                        </form>
+                    </body>
+                </html>
             """
+                % state
+            )
 
-            response = html % stateis
-
-            cl.send('HTTP/1.0 200 OK\r\nContent-type: text/html\r\n\r\n')
-            cl.send(response)
-            cl.close()
+            client.send("HTTP/1.0 200 OK\r\nContent-type: text/html\r\n\r\n")
+            client.send(html)
+            client.close()
 
         except OSError as e:
-            cl.close()
-            print('connection closed')
-    
+            client.close()
+            print("Client disconnected")
+
+
+def setupUi():
+    while True:
+        led.on()
+        sleep(1)
+        led.off()
+        sleep(1)
+
+
 setupNetwork()
 setupServer()
 # setupUi()
-    
