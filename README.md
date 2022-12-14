@@ -9,6 +9,6 @@
 ```python
 # keys.py
 
-SSID = ''
-PASSWORD = ''
+SSID = ""
+PASSWORD = ""
 ```
