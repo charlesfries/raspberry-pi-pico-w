@@ -11,12 +11,20 @@ MAX_WAIT = 10
 led = Pin("LED", Pin.OUT)
 
 
+def setupUi():
+    for i in range(3):
+        led.on()
+        sleep(0.5)
+        led.off()
+        sleep(0.5)
+
+
 def setupNetwork():
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
 
     mac = ubinascii.hexlify(network.WLAN().config("mac"), ":").decode()
-    print("MAC", mac)
+    print("MAC Address:", mac)
 
     print("Connecting to", keys.SSID)
     wlan.connect(keys.SSID, keys.PASSWORD)
@@ -33,7 +41,8 @@ def setupNetwork():
         raise RuntimeError("Could not connect")
     else:
         status = wlan.ifconfig()
-        print("Connected with IP", status[0])
+        print("Connected with IP Address:", status[0])
+        led.on()
 
     return wlan
 
@@ -48,9 +57,9 @@ def setupServer():
     while True:
         try:
             client, addr = connection.accept()
-            print("Client connected from", addr)
+            print("Client connected from", addr[0])
             request = client.recv(1024)
-            print(request)
+            # print(request)
 
             request = str(request)
             led_on = request.find("/light/on")
@@ -101,14 +110,6 @@ def setupServer():
             print("Client disconnected")
 
 
-def setupUi():
-    while True:
-        led.on()
-        sleep(1)
-        led.off()
-        sleep(1)
-
-
+setupUi()
 setupNetwork()
 setupServer()
-# setupUi()
