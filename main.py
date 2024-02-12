@@ -12,7 +12,6 @@ led = Pin("LED", Pin.OUT)
 
 
 def setupNetwork():
-
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
 
