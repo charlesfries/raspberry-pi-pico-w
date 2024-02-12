@@ -105,7 +105,7 @@ def setupServer():
             client.send(html)
             client.close()
 
-        except OSError as e:
+        except OSError:
             client.close()
             print("Client disconnected")
 
