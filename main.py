@@ -4,7 +4,7 @@ import socket
 from time import sleep
 from machine import Pin
 
-import keys
+import secrets
 
 MAX_WAIT = 10
 
@@ -26,8 +26,8 @@ def setupNetwork():
     mac = ubinascii.hexlify(network.WLAN().config("mac"), ":").decode()
     print("MAC Address:", mac)
 
-    print("Connecting to", keys.SSID)
-    wlan.connect(keys.SSID, keys.PASSWORD)
+    print("Connecting to", secrets.SSID)
+    wlan.connect(secrets.SSID, secrets.PASSWORD)
 
     max_wait = MAX_WAIT
     while max_wait > 0:
